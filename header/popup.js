@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { db, collection, addDoc} from '../config';
+import { db, collection, addDoc, auth, signOut } from '../config';
 
 function Popup() {
   const [firstName, setFirstName] = useState('');
@@ -17,6 +17,16 @@ function Popup() {
       console.log("Document written with ID: ", docRef.id);
     } catch (e) {
       console.error("Error adding document: ", e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log('User signed out');
+      navigation.navigate('App');  // Assuming 'App' is the name of the route to navigate back to App.js
+    } catch (e) {
+      console.error('Error signing out: ', e);
     }
   };
 
@@ -43,7 +53,11 @@ function Popup() {
         keyboardType="number-pad"
       />
       <TouchableOpacity style={styles.button} onPress={handleAddUser}>
-        <Text style={styles.buttonText}>Add User</Text>
+        <Text style={styles.buttonText}>Ada User</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );

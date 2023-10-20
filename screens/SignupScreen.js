@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { Formik } from 'formik';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+//import { } from 'firebase/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import { View, TextInput, Logo, Button, FormErrorMessage } from '../components';
-import { Images, Colors, auth } from '../config';
+import { Images, Colors, auth, db, collection, addDoc, doc, setDoc, createUserWithEmailAndPassword, onAuthStateChanged } from '../config';
 import { useTogglePasswordVisibility } from '../../test/hooks';
 import { signupValidationSchema } from '../utils';
 
@@ -24,6 +24,24 @@ export const SignupScreen = ({ navigation }) => {
   const handleSignup = async values => {
     const { email, password } = values;
 
+    try {
+      // Create user and get user UID
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const username = email.split('@')[0];
+
+      // Add user info to Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        emergencyNumber: '01012345678',
+        fullName: username,
+        word: '예약어',
+      });
+
+      console.log('User info added to Firestore');
+    } catch (error) {
+      setErrorState(error.message);
+    }
+    
     createUserWithEmailAndPassword(auth, email, password).catch(error =>
       setErrorState(error.message)
     );

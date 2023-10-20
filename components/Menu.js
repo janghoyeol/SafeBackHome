@@ -37,7 +37,7 @@ function Menu({ closeMenu }) {
     <TouchableOpacity style={styles.modal} onPress={handlePress} activeOpacity={1}>
         <View style={styles.topSection}>
         <TouchableOpacity 
-  onPress={goToPopup} 
+          onPress={goToPopup} 
   hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
   style={{position: 'absolute', top: 10, right: 10, zIndex: 3}}>
   <Icon name="cog" style={styles.settingsIcon} size={30} color="white"/>
