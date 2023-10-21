@@ -5,7 +5,7 @@ import { Audio } from 'expo-av';
 import RadioForm from 'react-native-simple-radio-button';
 import { useNavigation } from '@react-navigation/native';
 
-function Popup() {
+function PopupScreen() {
   const [userData, setUserData] = useState(null);
   const [emergencyNumber, setEmergencyNumber] = useState('');
   const [fullName, setFullName] = useState('');
@@ -78,11 +78,11 @@ function Popup() {
     const soundObj = new Audio.Sound();
     try {
       if (sound) {
-        await sound.unloadAsync();  // Stop previous sound
+        await sound.unloadAsync();
       }
       await soundObj.loadAsync(sirenFiles[siren]);
       await soundObj.playAsync();
-      setSound(soundObj);  // Save sound object to state
+      setSound(soundObj);
     } catch (error) {
       console.error(error);
     }
@@ -118,7 +118,6 @@ function Popup() {
     try {
       await signOut(auth);
       console.log('로그아웃 완료');
-      navigation.navigate('App');
     } catch (error) {
       console.error('로그아웃 오류: ', error);
     }
@@ -130,7 +129,7 @@ function Popup() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>개인 정보 수정</Text>
+      <Text style={styles.title}>환경 설정</Text>
       <TextInput
         style={styles.input}
         placeholder="비상 전화번호"
@@ -152,7 +151,10 @@ function Popup() {
         onChangeText={setWord}
       />
 
-      <TouchableOpacity onPress={() => setImagePickerVisible(true)}>
+      <TouchableOpacity
+        style={styles.profileButton}
+        onPress={() => setImagePickerVisible(true)}
+      >
         <Text>프로필 사진 변경</Text>
       </TouchableOpacity>
       {isImagePickerVisible && (
@@ -176,6 +178,7 @@ function Popup() {
         </Modal>
       )}
       <Text style={{marginBottom: 10}}>긴급 상황 사이렌</Text>
+      <View style={{flexDirection: 'row', justifyContent: 'space-around', width: '80%'}}></View>
       <RadioForm
         radio_props={radio_props}
         initial={getIndex(sirenSound)}
@@ -195,7 +198,7 @@ function Popup() {
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>로그아웃</Text>
       </TouchableOpacity>
-    </View>
+      </View>
   );
 }      
 
@@ -204,6 +207,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   title: {
     fontSize: 24,
@@ -211,20 +215,46 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 20,
     width: '80%',
     paddingHorizontal: 10,
   },
+  profileButton: {
+    backgroundColor: '#0dee0d',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+  },
+    profileButtonText: {
+      color: 'black',
+    },
   button: {
     backgroundColor: '#008CBA',
     padding: 10,
     borderRadius: 5,
+    marginVertical: 5,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonText: {
     color: 'white',
   },
 });
 
-export default Popup;
+export default PopupScreen;

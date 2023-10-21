@@ -81,18 +81,15 @@ export const LoginScreen = ({ navigation }) => {
                   error={errors.password}
                   visible={touched.password}
                 />
-                {/* Display Screen Error Mesages */}
                 {errorState !== '' ? (
                   <FormErrorMessage error={errorState} visible={true} />
                 ) : null}
-                {/* Login button */}
                 <Button style={styles.button} onPress={handleSubmit}>
                   <Text style={styles.buttonText}>로그인</Text>
                 </Button>
               </>
             )}
           </Formik>
-          {/* Button to navigate to SignupScreen to create a new account */}
           <Button
             style={styles.borderlessButtonContainer}
             borderless
@@ -111,7 +108,7 @@ export const LoginScreen = ({ navigation }) => {
       {/* App info footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          귀갓길 대화 상대를 만나보세요
+          혼자일 때 당신의 대화친구가 되어줍니다
         </Text>
       </View>
     </>

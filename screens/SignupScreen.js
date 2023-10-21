@@ -36,7 +36,7 @@ export const SignupScreen = ({ navigation }) => {
         profile: 'default.png',
       });
 
-      console.log('User info added to Firestore');
+      console.log('파이어베이스에 데이터 추가 완료');
     } catch (error) {
       setErrorState(error.message);
     }

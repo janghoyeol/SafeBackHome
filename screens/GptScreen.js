@@ -18,7 +18,7 @@ const speak = (message) => {
   Speech.speak(message);
 };
 
-const Gpt = () => {
+const GptScreen = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [emergencyNumber, setEmergencyNumber] = useState('');
@@ -26,14 +26,14 @@ const Gpt = () => {
 
   const fetchUserSettings = async () => {
     try {
-      const docRef = doc(db, "users", auth.currentUser.uid);  // Assuming auth.currentUser.uid is the current user's uid
+      const docRef = doc(db, "users", auth.currentUser.uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         setEmergencyNumber(docSnap.data().emergencyNumber);
         setReservedWord(docSnap.data().word);
       } else {
-        console.log("No such document!");
+        console.log("firebase 오류 발생!!");
       }
     } catch (error) {
       console.error(error);
@@ -62,7 +62,9 @@ const Gpt = () => {
         return;
       }
 
-      const prompt = newMessages.map(m => `${m.type === 'user' ? 'You' : 'AI'}: ${m.text}`).join('\n') + '\nAI:';
+      const initialPrompt = "질문자인 나는 지금 혼자 집에 귀가하고 있는 사람이야. GPT인 너는 내가 대화 상대가 필요해서 부른 친구야. 내가 대화를 걸텐데, 너는 대화가 끊기지 않게 통화하는 것처럼 말을 이어나가야 해. 답장은 반말로 부탁해.";
+
+      const prompt = initialPrompt + '\n' + newMessages.map(m => `${m.type === 'user' ? 'You' : 'AI'}: ${m.text}`).join('\n') + '\nAI:';
 
       const response = await openai.createCompletion({
         model: "text-davinci-003",
@@ -86,7 +88,7 @@ const Gpt = () => {
 
   return (
     <View style={styles.container}>
-        <Text style={styles.title}>AI Chatbot</Text>
+        <Text style={styles.title}>안심 대화친구</Text>
         
         <View style={styles.chatContainer}>
           <ScrollView style={styles.messagesContainer}>
@@ -108,12 +110,12 @@ const Gpt = () => {
             <View style={styles.inputContainer}>
                 <TextInput
                     style={styles.input}
-                    placeholder="Type your message here"
+                    placeholder="여기에 메시지 입력"
                     onChangeText={(text) => setInput(text)}
                     value={input}
                 />
                 <TouchableOpacity style={styles.sendButton} onPress={handleInput}>
-                    <Text style={styles.sendButtonText}>Send</Text>
+                    <Text style={styles.sendButtonText}>전송</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -205,5 +207,5 @@ const styles = StyleSheet.create({
     },
   });
   
-  export default Gpt;
+  export default GptScreen;
   

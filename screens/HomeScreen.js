@@ -6,7 +6,7 @@ import { auth, db, doc, getDoc } from '../config';
 import { useNavigation } from '@react-navigation/native';
 
 import Header from '../components/Header';
-import Menu from '../components/Menu';
+import MenuScreen from './MenuScreen';
 
 function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -78,10 +78,11 @@ function HomeScreen() {
             activeOpacity={1}
             onPress={closeMenu}
           />}
-          {menuVisible && <Menu closeMenu={closeMenu} />}
+          {menuVisible && <MenuScreen closeMenu={closeMenu} />}
       <View style={styles.contentContainer}>
         <View style={styles.sosContainer}>
-          <Text style={styles.infoText}>짧게 누르면 사이렌 3초 누르면 긴급신고</Text>
+          <Text style={styles.infoText}>짧게 누르면 사이렌</Text>
+          <Text style={styles.infoText}>3초 누르면 긴급신고</Text>
           <TouchableOpacity 
             style={styles.sosButton}
             onPressIn={playSiren}
@@ -96,7 +97,7 @@ function HomeScreen() {
             <Image source={require('../assets/gpt.png')} style={styles.icon} />
           </TouchableOpacity>
         
-          <Text style={styles.iconText}>음성대화 시작</Text>
+          <Text style={styles.iconText}>대화 시작</Text>
         </View>
       </View>
       

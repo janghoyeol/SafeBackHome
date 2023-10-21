@@ -6,7 +6,7 @@ import { db, doc, auth, getDoc, onAuthStateChanged } from '../config';
 
 const screenWidth = Dimensions.get('window').width;
 
-function Menu({ closeMenu }) {
+function MenuScreen({ closeMenu }) {
   const [modalType, setModalType] = useState(null);
   const [userData, setUserData] = useState(null);
 
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',  // 라이트 그레이 배경색 추가
   },
   topSection: {
-    height: '40%',
+    height: '50.85%',
     backgroundColor: '#3498db',  // 블루 색상으로 변경
     justifyContent: 'center',
     alignItems: 'center',
@@ -115,15 +115,15 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',  // 구분선 색상 설정
   },
   bottomSection: {
-    height: '60%',
+    height: '49.15%',
     backgroundColor: 'white',
     alignItems: 'flex-start',
     padding: 15,
     paddingLeft: 20,  // 패딩 조정
   },
   profileImage: {
-    width: 80,
-    height: 80,
+    width: 160,
+    height: 160,
     borderRadius: 40,
     marginBottom: 10,  // 마진 추가
   },
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
   },
   settingsIcon: {
     position: 'absolute',
-    top: 20,  // 위치 조정
-    right: 20,  // 위치 조정
+    top: 30,  // 위치 조정
+    right: 10,  // 위치 조정
     zIndex: 3,
   },
   infoText: {
@@ -146,4 +146,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Menu;
+export default MenuScreen;
