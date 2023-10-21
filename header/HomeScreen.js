@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Linking } from 'react-native';
+import { Audio } from 'expo-av';
+import { auth, db, doc, getDoc } from '../config';
 import { useNavigation } from '@react-navigation/native';
 
 import Header from '../components/Header';
@@ -8,7 +10,25 @@ import Menu from '../components/Menu';
 
 function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [emergencyNumber, setEmergencyNumber] = useState(null);
+  const [sirenSound, setSirenSound] = useState('siren1');
+
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const fetchEmergencyNumber = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setEmergencyNumber(docSnap.data().emergencyNumber);
+          setSirenSound(docSnap.data().sirenSound);
+        }
+      }
+    };
+    fetchEmergencyNumber();
+  }, []);
 
   const openMenu = () => {
     setMenuVisible(true);
@@ -18,10 +38,30 @@ function HomeScreen() {
     setMenuVisible(false);
   };
 
+  const sirenFiles = {
+    siren1: require('../assets/sound/siren1.mp3'),
+    siren2: require('../assets/sound/siren2.mp3'),
+    siren3: require('../assets/sound/siren3.mp3')
+  };
+
+  const playSiren = async () => {
+    const siren = new Audio.Sound();
+    try {
+      const sirenFile = sirenFiles[sirenSound];
+      await siren.loadAsync(sirenFile);
+      await siren.playAsync();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const makePhoneCall = () => {
-    const phoneNumber = 'tel:010-0000-0000';
-    Linking.openURL(phoneNumber);
-  }
+    if (emergencyNumber) {
+      const formattedNumber = emergencyNumber.slice(0, 3) + '-' + emergencyNumber.slice(3, 7) + '-' + emergencyNumber.slice(7, 11);
+      const phoneNumber = `tel:${formattedNumber}`;
+      Linking.openURL(phoneNumber);
+    }
+  };
 
   const goGTPScreen = () => {
     navigation.navigate('GPT');
@@ -30,6 +70,7 @@ function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.topBar}></View>
         <Header openMenu={openMenu} />
         {menuVisible && 
           <TouchableOpacity
@@ -40,9 +81,10 @@ function HomeScreen() {
           {menuVisible && <Menu closeMenu={closeMenu} />}
       <View style={styles.contentContainer}>
         <View style={styles.sosContainer}>
-          <Text style={styles.infoText}>긴급 상황 시 3초간 꾹 누르세요</Text>
+          <Text style={styles.infoText}>짧게 누르면 사이렌 3초 누르면 긴급신고</Text>
           <TouchableOpacity 
             style={styles.sosButton}
+            onPressIn={playSiren}
             onLongPress={makePhoneCall}
             delayLongPress={3000}
           >
@@ -65,6 +107,10 @@ function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    backgroundColor: 'black',
+    height: '3%',
   },
   contentContainer: {
     flex: 1,

@@ -1,67 +1,203 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { db, collection, addDoc, auth, signOut } from '../config';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal, Image } from 'react-native';
+import { db, doc, setDoc, auth, signOut, getDoc } from '../config';
+import { Audio } from 'expo-av';
+import RadioForm from 'react-native-simple-radio-button';
+import { useNavigation } from '@react-navigation/native';
 
 function Popup() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  const [userData, setUserData] = useState(null);
+  const [emergencyNumber, setEmergencyNumber] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [word, setWord] = useState('');
+  const [sirenSound, setSirenSound] = useState(null);
+  const [sound, setSound] = useState(null);
+  const [selectedImage, setSelectedImage] = useState('default.png');
+  const [isImagePickerVisible, setImagePickerVisible] = useState(false);
 
-  const handleAddUser = async () => {
+  const navigation = useNavigation();
+
+  const fetchUserData = async () => {
     try {
-      const docRef = await addDoc(collection(db, "users"), {
-        first: firstName,
-        last: lastName,
-        born: parseInt(birthYear, 10)
-      });
-      console.log("Document written with ID: ", docRef.id);
-    } catch (e) {
-      console.error("Error adding document: ", e);
+      const uid = auth.currentUser.uid;
+      const docRef = doc(db, 'users', uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserData(data);
+        setEmergencyNumber(data.emergencyNumber);
+        setFullName(data.fullName);
+        setWord(data.word);
+        setSirenSound(data.sirenSound);
+      } else {
+        console.log('firebase 오류!');
+      }
+    } catch (error) {
+      console.error('파이어 베이스 오류:', error);
+    }
+  };
+
+  const radio_props = [
+    {label: '1', value: 'siren1' },
+    {label: '2', value: 'siren2' },
+    {label: '3', value: 'siren3' }
+  ];
+
+  const sirenFiles = {
+    siren1: require('../assets/sound/siren1.mp3'),
+    siren2: require('../assets/sound/siren2.mp3'),
+    siren3: require('../assets/sound/siren3.mp3')
+  };
+
+  const imageOptions = [
+    { label: 'Default', value: 'default.png' },
+    { label: 'Child', value: 'child.png' },
+    { label: 'Elder', value: 'elder.png' },
+    { label: 'Girl', value: 'girl.png' },
+    { label: 'Man', value: 'man.png' },
+  ];
+  const getIcon = (iconName) => {
+    switch(iconName) {
+      case 'default.png':
+        return require('../assets/icons/default.png');
+      case 'child.png':
+        return require('../assets/icons/child.png');
+      case 'elder.png':
+        return require('../assets/icons/elder.png');
+      case 'girl.png':
+        return require('../assets/icons/girl.png');
+      case 'man.png':
+        return require('../assets/icons/man.png');
+      default:
+        return require('../assets/icons/default.png');
+    }
+  };
+
+  const playSiren = async (siren) => {
+    const soundObj = new Audio.Sound();
+    try {
+      if (sound) {
+        await sound.unloadAsync();  // Stop previous sound
+      }
+      await soundObj.loadAsync(sirenFiles[siren]);
+      await soundObj.playAsync();
+      setSound(soundObj);  // Save sound object to state
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const handleUpdateUser = async () => {
+    try {
+      if (sound) {
+        await sound.unloadAsync();
+      }
+      const uid = auth.currentUser.uid;
+      const docRef = doc(db, 'users', uid);
+      await setDoc(docRef, {
+        emergencyNumber,
+        fullName,
+        word,
+        sirenSound,
+        profile: selectedImage,
+      }, { merge: true });
+
+      console.log('개인 정보 업데이트 성공!');
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error('업데이트 오류:', error);
     }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      console.log('User signed out');
-      navigation.navigate('App');  // Assuming 'App' is the name of the route to navigate back to App.js
-    } catch (e) {
-      console.error('Error signing out: ', e);
+      console.log('로그아웃 완료');
+      navigation.navigate('App');
+    } catch (error) {
+      console.error('로그아웃 오류: ', error);
     }
+  };
+
+  const getIndex = (sound) => {
+    return sound === 'siren1' ? 0 : sound === 'siren2' ? 1 : 2;
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add User</Text>
+      <Text style={styles.title}>개인 정보 수정</Text>
       <TextInput
         style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Birth Year"
-        value={birthYear}
-        onChangeText={setBirthYear}
+        placeholder="비상 전화번호"
+        value={emergencyNumber}
+        onChangeText={setEmergencyNumber}
+        maxLength={11}
         keyboardType="number-pad"
       />
-      <TouchableOpacity style={styles.button} onPress={handleAddUser}>
-        <Text style={styles.buttonText}>Ada User</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="닉네임"
+        value={fullName}
+        onChangeText={setFullName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="예약어"
+        value={word}
+        onChangeText={setWord}
+      />
+
+      <TouchableOpacity onPress={() => setImagePickerVisible(true)}>
+        <Text>프로필 사진 변경</Text>
+      </TouchableOpacity>
+      {isImagePickerVisible && (
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={isImagePickerVisible}
+          onRequestClose={() => setImagePickerVisible(false)}
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            {imageOptions.map((option, index) => (
+              <TouchableOpacity key={index} onPress={() => {
+                setSelectedImage(option.value);
+                setImagePickerVisible(false);  // 이미지 선택 후 Modal 닫기
+              }}>
+                <Image source={getIcon(option.value)} style={{ width: 50, height: 50 }} />
+                <Text style={{textAlign: 'center'}}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Modal>
+      )}
+      <Text style={{marginBottom: 10}}>긴급 상황 사이렌</Text>
+      <RadioForm
+        radio_props={radio_props}
+        initial={getIndex(sirenSound)}
+        onPress={(value) => { 
+          setSirenSound(value);
+          playSiren(value);
+        }}
+        buttonColor={'#2196f3'}
+        selectedButtonColor={'#2196f3'}
+        labelHorizontal={true}
+        labelStyle={{paddingRight: 10}}
+      />
+      <TouchableOpacity style={styles.button} onPress={handleUpdateUser}>
+        <Text style={styles.buttonText}>개인정보 수정</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
+        <Text style={styles.buttonText}>로그아웃</Text>
       </TouchableOpacity>
     </View>
   );
-}
+}      
 
 const styles = StyleSheet.create({
   container: {

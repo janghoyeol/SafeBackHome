@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { Configuration, OpenAIApi } from 'openai';
 import { OPENAI_API_KEY } from "react-native-dotenv";
+import { Linking } from 'react-native';
+import { auth, db, doc, getDoc } from '../config';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Speech from 'expo-speech';
 import "react-native-url-polyfill/auto"
 
 const configuration = new Configuration({
     apiKey: OPENAI_API_KEY,
-  });
+});
 
 const openai = new OpenAIApi(configuration);
 
@@ -19,14 +21,46 @@ const speak = (message) => {
 const Gpt = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const [emergencyNumber, setEmergencyNumber] = useState('');
+  const [reservedWord, setReservedWord] = useState('');
+
+  const fetchUserSettings = async () => {
+    try {
+      const docRef = doc(db, "users", auth.currentUser.uid);  // Assuming auth.currentUser.uid is the current user's uid
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setEmergencyNumber(docSnap.data().emergencyNumber);
+        setReservedWord(docSnap.data().word);
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserSettings();
+  }, []);
+
+  const callEmergencyNumber = () => {
+    const phoneNumber = `tel:${emergencyNumber}`;
+    Linking.openURL(phoneNumber);
+  };
 
   const handleInput = async () => {
     try {
       const userInput = input;
 
-      const newMessages = [...messages, {type: 'user', text: userInput}];
+      const newMessages = [...messages, { type: 'user', text: userInput }];
 
       setMessages(newMessages);
+
+      if (userInput.includes(reservedWord)) {
+        callEmergencyNumber();
+        return;
+      }
 
       const prompt = newMessages.map(m => `${m.type === 'user' ? 'You' : 'AI'}: ${m.text}`).join('\n') + '\nAI:';
 
@@ -39,16 +73,16 @@ const Gpt = () => {
         frequency_penalty: 0.5,
         presence_penalty: 1.0,
         stop: ["You:"],
-        
+
       });
-      setMessages(prev => [...prev, {type: 'ai', text: response.data.choices[0].text.trim()}]);
-      
+      setMessages(prev => [...prev, { type: 'ai', text: response.data.choices[0].text.trim() }]);
+
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
 
     setInput('');
-  }  
+  }
 
   return (
     <View style={styles.container}>
